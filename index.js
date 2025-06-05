@@ -16,11 +16,8 @@ const registerController = require('./Controller/registerController');
 app.use(cors())
 app.use(express.json());
 app.use('/images', express.static(__dirname + '/images'));
-
 const multer = require('multer');
-const { v4: uuidv4 } = require('uuid');
 const path = require('path');
-const router = express.Router()
 
 // config storage images
 const storage = multer.diskStorage({

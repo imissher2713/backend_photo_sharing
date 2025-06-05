@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
             res.status(200).send("Success!")
         }
         catch(e){
-            res.status(400).send("Failed!");
+            res.status(400).send("Failed!"); 
         }
     }
     catch(e){
