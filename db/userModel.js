@@ -8,7 +8,6 @@ const userSchema = new mongoose.Schema({
   location: { type: String },
   description: { type: String },
   occupation: { type: String },
-
 });
 
 module.exports = mongoose.model.Users || mongoose.model("Users", userSchema);

@@ -8,13 +8,30 @@ const PhotoRouter = require("./routes/PhotoRouter");
 const userModel = require("./db/userModel");
 const addPhotoController = require('./Controller/AddPhotoController');
 const secretKey = "toi_nho_em_nhieu_lam"
-const session = require("express-session");
+// const session = require("express-session");
 const Photo = require("./db/photoModel");
 const verifyToken = require("./middleware/auth");
 const blacklistedTokens = require("./middleware/blacklistedTokens");
 const registerController = require('./Controller/registerController');
 app.use(cors())
+app.use(express.json());
 app.use('/images', express.static(__dirname + '/images'));
+
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const router = express.Router()
+
+// config storage images
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, __dirname + '/images');
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + path.extname(file.originalname);
+    cb(null, uniqueName);
+  }
+});
 dbConnect();
 const loginController = async (req, res) => {
   const { login, password } = req.body;
@@ -26,7 +43,6 @@ const loginController = async (req, res) => {
         res.status(500).send("Error generating token");
       }
       else{
-        console.log(token);
         res.status(200).json({token, user})
       }
     })
@@ -44,7 +60,7 @@ const logoutController = (req, res) => {
 const commentController = async (req, res) => {
   try {
     if(req.body.comment !== "" || req.body.comment !== undefined){
-       const photo_id = req.params.photo_id;
+      const photo_id = req.params.photo_id;
       let photo = await Photo.findOne({ _id: photo_id });
       let commentUser = {
         comment: req.body.comment,
@@ -55,7 +71,6 @@ const commentController = async (req, res) => {
       photo.comments.push(commentUser)
       await Photo.findOneAndReplace({ _id: photo_id }, photo).exec();
       res.status(200).send("Success!");
-
     }
     else{
       res.status(400).send({message: "Bad Request"});
@@ -67,8 +82,6 @@ const commentController = async (req, res) => {
   }
 }
 
-app.use(cors());
-app.use(express.json());
 app.use("/api/user", UserRouter);
 app.use("/api/photo", PhotoRouter);
 
@@ -79,8 +92,9 @@ app.get("/", (request, response) => {
 app.post("/user", registerController)
 app.post('/admin/login', loginController)
 app.get('/admin/logout', verifyToken, logoutController)
-app.post('/commentsOfPhoto/:photo_id', verifyToken , commentController)
-app.post('/photo/new', verifyToken, addPhotoController)
+const upload = multer({storage: storage})
+app.post('/commentsOfPhoto/:photo_id', verifyToken ,commentController)
+app.post('/photo/new', verifyToken, upload.single('file'), addPhotoController)
 
 app.listen(8081, () => {
 
